@@ -77,6 +77,12 @@ contract MyERC1155 is ERC1155, ERC1155URIStorage{
         require(msg.sender == selectedAuction.seller, "only seller can accept a bid");
         _safeTransferFrom(selectedAuction.seller, selectedBid.bidder, _tokenId, selectedAuction.amount, "");
         payable(selectedAuction.seller).transfer(selectedBid.biddingPrice);
+        Bid[] memory nonSelectedBids = bidders[_tokenId][_auction];
+        for (uint256 i = 0; i < nonSelectedBids.length; i++) {
+            if (i != _bidder) {
+                payable(nonSelectedBids[i].bidder).transfer(nonSelectedBids[i].biddingPrice);
+            }
+        }
         delete unlimitedAuctions[_tokenId][_auction];
         delete bidders[_tokenId][_auction];
     }
