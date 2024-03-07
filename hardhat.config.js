@@ -2,3 +2,4 @@ require('@openzeppelin/hardhat-upgrades');/** @type import('hardhat/config').Har
 module.exports = {
   solidity: "0.8.24",
 };
+
