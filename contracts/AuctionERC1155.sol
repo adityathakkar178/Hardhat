@@ -56,19 +56,10 @@ contract MyERC1155 is ERC1155, ERC1155URIStorage{
         unlimitedAuctions[_tokenId].push(Auction(msg.sender, _tokenId, _amount, _startingPrice, block.timestamp));
     }
 
-    function getUnlimitedAuction(uint256 _tokenId) public view returns(Auction[] memory) {
-        return unlimitedAuctions[_tokenId];
-    }
-
     function placeBid(uint256 _tokenId, uint256 _seller) public payable {
-        require(unlimitedAuctions[_tokenId].length > 0, "Invalid auction");
         require(msg.sender != unlimitedAuctions[_tokenId][_seller].seller, "Seller can not place bid");
         require(msg.value > unlimitedAuctions[_tokenId][_seller].startingPrice, "Bidding price must be greater than starting price");
         bidders[_tokenId][_seller].push(Bid(msg.sender, msg.value));
-    }
-
-    function getBidders(uint256 _tokenId, uint256 _bidder) public view returns(Bid[] memory) {
-        return bidders[_tokenId][_bidder];
     }
 
     function acceptBid(uint256 _tokenId, uint256 _auction, uint256 _bidder) public {
@@ -85,5 +76,27 @@ contract MyERC1155 is ERC1155, ERC1155URIStorage{
         }
         delete unlimitedAuctions[_tokenId][_auction];
         delete bidders[_tokenId][_auction];
+    }
+
+    function withdrawBid(uint256 _tokenId, uint256 _auction) public {
+        uint256 numBids = bidders[_tokenId][_auction].length;
+        bool found;
+        for (uint256 i = 0; i < numBids; i++) {
+            if (bidders[_tokenId][_auction][i].bidder == msg.sender) {
+                uint256 bidderAmount = bidders[_tokenId][_auction][i].biddingPrice;
+                payable(msg.sender).transfer(bidderAmount);
+                found = true;
+                delete bidders[_tokenId][_auction][i];
+                break;
+            }
+        }
+        require(found, "You have not palced a bid for this auction's token");
+    }
+
+    function rejectBid(uint256 _tokenId, uint256 _auction, uint256 _bid) public {
+        Auction memory selectAuction = unlimitedAuctions[_tokenId][_auction];
+        require(selectAuction.seller == msg.sender, "Only seller can reject the bid");
+        payable(bidders[_tokenId][_auction][_bid].bidder).transfer(bidders[_tokenId][_auction][_bid].biddingPrice);
+        delete bidders[_tokenId][_auction][_bid];
     }
 }
