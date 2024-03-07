@@ -12,11 +12,17 @@ contract MyERC1155 is ERC1155, ERC1155URIStorage{
         uint256 unlimitedAuctionStartTime;
     }
 
+    struct Bid {
+        address bidder;
+        uint256 biddingPrice;
+    }
+
     address private _admin;
     uint256 private _tokenIdCounter;
     mapping (string => bool) private _uris;
     mapping (uint256 => address) private _creator;
     mapping (uint256 => Auction[]) public unlimitedAuctions;
+    mapping (uint256 => mapping(uint256 => Bid[])) public bidders; 
 
     constructor() ERC1155("") {
         _admin = msg.sender;
@@ -52,5 +58,26 @@ contract MyERC1155 is ERC1155, ERC1155URIStorage{
 
     function getUnlimitedAuction(uint256 _tokenId) public view returns(Auction[] memory) {
         return unlimitedAuctions[_tokenId];
+    }
+
+    function placeBid(uint256 _tokenId, uint256 _seller) public payable {
+        require(unlimitedAuctions[_tokenId].length > 0, "Invalid auction");
+        require(msg.sender != unlimitedAuctions[_tokenId][_seller].seller, "Seller can not place bid");
+        require(msg.value > unlimitedAuctions[_tokenId][_seller].startingPrice, "Bidding price must be greater than starting price");
+        bidders[_tokenId][_seller].push(Bid(msg.sender, msg.value));
+    }
+
+    function getBidders(uint256 _tokenId, uint256 _bidder) public view returns(Bid[] memory) {
+        return bidders[_tokenId][_bidder];
+    }
+
+    function acceptBid(uint256 _tokenId, uint256 _auction, uint256 _bidder) public {
+        Auction memory selectedAuction = unlimitedAuctions[_tokenId][_auction];
+        Bid memory selectedBid =  bidders[_tokenId][_auction][_bidder];
+        require(msg.sender == selectedAuction.seller, "only seller can accept a bid");
+        _safeTransferFrom(selectedAuction.seller, selectedBid.bidder, _tokenId, selectedAuction.amount, "");
+        payable(selectedAuction.seller).transfer(selectedBid.biddingPrice);
+        delete unlimitedAuctions[_tokenId][_auction];
+        delete bidders[_tokenId][_auction];
     }
 }
