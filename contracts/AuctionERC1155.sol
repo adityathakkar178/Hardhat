@@ -90,7 +90,7 @@ contract MyERC1155 is ERC1155, ERC1155URIStorage{
                 break;
             }
         }
-        require(found, "You have not palced a bid for this auction's token");
+        require(found, "You have not palced a bid for this auctions token");
     }
 
     function rejectBid(uint256 _tokenId, uint256 _auction, uint256 _bid) public {
