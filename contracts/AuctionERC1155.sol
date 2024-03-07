@@ -94,9 +94,18 @@ contract MyERC1155 is ERC1155, ERC1155URIStorage{
     }
 
     function rejectBid(uint256 _tokenId, uint256 _auction, uint256 _bid) public {
-        Auction memory selectAuction = unlimitedAuctions[_tokenId][_auction];
-        require(selectAuction.seller == msg.sender, "Only seller can reject the bid");
+        require(unlimitedAuctions[_tokenId][_auction].seller == msg.sender, "Only seller can reject the bid");
+        require(_bid < bidders[_tokenId][_bid].length, "Invalid bidder");
         payable(bidders[_tokenId][_auction][_bid].bidder).transfer(bidders[_tokenId][_auction][_bid].biddingPrice);
         delete bidders[_tokenId][_auction][_bid];
+    }
+
+    function withdrawAuction(uint256 _tokenId, uint256 _auction) public {
+        require( unlimitedAuctions[_tokenId][_auction].seller == msg.sender, "Only seller can withdraw auction");
+        for (uint256 i = 0; i < bidders[_tokenId][_auction].length; i++) {
+            payable(bidders[_tokenId][_auction][i].bidder).transfer(bidders[_tokenId][_auction][i].biddingPrice);
+        }
+        delete unlimitedAuctions[_tokenId][_auction];
+        delete bidders[_tokenId][_auction];
     }
 }
