@@ -95,7 +95,6 @@ contract MyERC1155 is ERC1155, ERC1155URIStorage{
     function withdrawBid(uint256 _tokenId, address _seller) public {
         uint256 numBids = bidders[_tokenId][_seller].length;
         bool found = false;
-        require(found, "No bid to withdraw for this sellers auction");
         for (uint256 i = 0; i < numBids; i++) {
             if (bidders[_tokenId][_seller][i].bidder == msg.sender) {
                 Bid memory withdrawnBid = bidders[_tokenId][_seller][i];                
@@ -105,6 +104,7 @@ contract MyERC1155 is ERC1155, ERC1155URIStorage{
                 break;
             }
         } 
+        require(found, "No bid to withdraw for this sellers auction")
     }
 
    function rejectBid(uint256 _tokenId, address _bidder) public {
