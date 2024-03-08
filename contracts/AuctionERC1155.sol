@@ -160,4 +160,5 @@ contract MyERC1155 is ERC1155, ERC1155URIStorage{
         require(timedAuctions[_tokenId][_auction].highestBidder == address(0), "Can not withdraw auction once bid has placed");
         delete timedAuctions[_tokenId][_auction];
     }
+    // Timed auction ends here
 }
